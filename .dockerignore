@@ -1,0 +1,28 @@
+# 依赖与构建产物
+node_modules
+.next
+out
+
+# 本地数据（不入镜像）
+uploads
+data
+_dev-archive
+.fetch
+
+# 数据库与密钥
+prisma/dev.db
+prisma/*.db-journal
+.env
+.env.local
+
+# 其他
+.git
+.gitignore
+README.md
+DEPLOY.md
+docker-compose.yml
+Dockerfile
+*.log
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store

@@ -1,0 +1,974 @@
+@import "tailwindcss";
+
+/* 显式声明源码扫描目录（Tailwind v4 自动检测有时漏掉新建组件） */
+@source "../components";
+@source "./";
+
+/* ============================================================
+   肆一纸心の栖息居 — 设计系统
+   高端毛玻璃极简 · 参考 XHBlogs 设计语言
+   ============================================================ */
+
+:root {
+  /* 亮色模式 */
+  --bg-base: #f4f4f9;
+  --text-primary: #17171f;
+  --text-secondary: #4b4b63;
+  --accent: #6c5ce7;
+  --accent-2: #00b8c9;
+  --gradient-main: linear-gradient(135deg, #6c5ce7 0%, #00b8c9 100%);
+
+  /* ---------- 毛玻璃控制层（第 3 层） ----------
+     之后做控制面板时，只需用 JS 改写这几个变量：
+     --glass-opacity 组件透明度 · --glass-blur 模糊强度 · --glass-saturate 饱和度 */
+  --glass-opacity: 0.34;
+  --glass-blur: 24px;
+  --glass-saturate: 185%;
+  /* 玻璃 backdrop 滤镜：完整值包进变量，避免构建期 CSS 压缩器
+     对 backdrop-filter 做前缀转换时删掉标准属性（删后 Chrome 不认
+     -webkit- 版里的 var()，玻璃模糊会失效） */
+  --glass-backdrop: blur(var(--glass-blur, 24px)) saturate(var(--glass-saturate, 180%));
+
+  --glass-tint: #ffffff;
+  --glass-bg: color-mix(in srgb, var(--glass-tint) calc(var(--glass-opacity) * 100%), transparent);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-highlight: rgba(255, 255, 255, 1);
+  --glass-shadow: 0 8px 32px rgba(23, 23, 60, 0.1), 0 2px 8px rgba(23, 23, 60, 0.05);
+  --card-hover-shadow: 0 18px 50px rgba(23, 23, 60, 0.16), 0 4px 12px rgba(23, 23, 60, 0.07);
+
+  /* 噪点纹理（磨砂用）：壁纸磨砂 / 组件毛玻璃共用 */
+  /* 磨砂噪点纹理：feTurbulence 后接 saturate(0) 转灰度，避免彩色噪点在玻璃底上偏紫 */
+  --noise-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+
+  --accent-muted: rgba(108, 92, 231, 0.1);
+  --nav-bg: rgba(244, 244, 249, 0.55);
+  --hairline: rgba(23, 23, 50, 0.08);
+
+  --spot-1: rgba(108, 92, 231, 0.28);
+  --spot-2: rgba(0, 184, 201, 0.2);
+  --spot-3: rgba(255, 99, 132, 0.14);
+
+  /* 壁纸蒙层（文字可读性兜底）：亮色主题用白纱提亮背景，深色文字更清晰。
+     亮色主题下壁纸通常本身偏亮，白纱强度打折（×0.65），避免洗白壁纸 */
+  --wallpaper-scrim-color: rgba(248, 250, 255, 1);
+  --wallpaper-scrim-factor: 0.65;
+
+  /* 文字阴影（第二道可读性兜底）：亮色主题白影要轻，避免在亮壁纸上产生重影 */
+  --text-shadow-readable: 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+.dark {
+  --bg-base: #0b0b14;
+  --text-primary: #f1f1f6;
+  --text-secondary: #a6a6c0;
+  --accent: #8b7cff;
+  --accent-2: #45d4e4;
+  --gradient-main: linear-gradient(135deg, #8b7cff 0%, #45d4e4 100%);
+
+  --glass-opacity: 0.30;
+  --glass-blur: 24px;
+  --glass-saturate: 175%;
+
+  --glass-tint: #1c2440;
+  --glass-bg: color-mix(in srgb, var(--glass-tint) calc(var(--glass-opacity) * 100%), transparent);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.18);
+  --card-hover-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
+
+  --accent-muted: rgba(139, 124, 255, 0.13);
+  --nav-bg: rgba(11, 12, 22, 0.5);
+  --hairline: rgba(255, 255, 255, 0.07);
+
+  --spot-1: rgba(108, 92, 231, 0.17);
+  --spot-2: rgba(0, 184, 201, 0.1);
+  --spot-3: rgba(255, 99, 132, 0.07);
+
+  /* 壁纸蒙层：深色主题用黑纱压暗背景，浅色文字更清晰 */
+  --wallpaper-scrim-color: rgba(5, 7, 16, 1);
+  --wallpaper-scrim-factor: 1;
+
+  /* 文字阴影：深色主题黑影，浅色文字边缘更锐利 */
+  --text-shadow-readable: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 0, 0, 0.3);
+
+  /* ===== 全局字体控制（后台「字体」面板）=====
+     默认值 = 现状：
+     - 正文/导航/辅助/按钮：思源黑体 + Inter 栈
+     - 标题：思源宋体栈（serif）
+     - 数字/代码：等宽栈
+     字号缩放默认 1（calc 乘 1 与现状像素级一致）；
+     字重 0 = 不覆盖（由 JS 用 data-fw-* 门控激活）；
+     标题字距默认 -0.02em = 现状。 */
+  --font-body: var(--font-noto-sc), var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-heading: var(--font-serif), var(--font-noto-sc), serif;
+  --font-nav: var(--font-noto-sc), var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-aux: var(--font-noto-sc), var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-btn: var(--font-noto-sc), var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --font-scale-body: 1;
+  --font-scale-heading: 1;
+  --font-scale-nav: 1;
+  --font-scale-aux: 1;
+  --font-scale-btn: 1;
+  --font-scale-mono: 1;
+  --font-tracking-heading: -0.02em;
+}
+
+/* ---------- 基础重置 ---------- */
+/* 注意：不要在此处重置 padding，否则会覆盖 Tailwind 的 p-* 工具类 */
+*, *::before, *::after {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  width: 100%;
+  /* clip 与 hidden 同样裁剪横向溢出，但不创建滚动容器 → position: sticky 保持有效 */
+  overflow-x: clip;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-base);
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
+  position: relative;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-shadow: var(--text-shadow-readable, none);
+  transition: background-color 0.5s ease, color 0.3s ease;
+}
+
+/* 标题使用思源宋体，增添文艺质感 */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: var(--font-tracking-heading);
+}
+
+/* ===== 全局字体分类覆盖（默认值=现状，零差异） ===== */
+/* 正文：p / li 显式继承 body 正文字体 */
+p, li {
+  font-family: var(--font-body);
+}
+/* 导航：前台导航栏 + 后台侧边栏/顶栏/移动端导航 */
+nav a, nav button,
+.glass-nav a, .glass-nav button,
+aside a, aside button {
+  font-family: var(--font-nav);
+}
+/* 辅助小字：时间、标签、徽标、元信息（极小字号类 + time 标签） */
+time,
+.glass-badge,
+.text-\[8px\], .text-\[9px\], .text-\[10px\], .text-\[10\.5px\],
+.text-\[11px\], .text-\[11\.5px\], .text-\[12\.5px\] {
+  font-family: var(--font-aux);
+}
+/* 按钮 */
+button, .btn-primary, .btn-ghost, .nav-icon-btn, .control-btn {
+  font-family: var(--font-btn);
+}
+/* 数字/代码 */
+code, pre, .font-mono, .mono {
+  font-family: var(--font-mono);
+}
+
+/* ---- 字号缩放（默认 ×1 = 现状，像素级一致） ---- */
+/* 正文 */
+p.text-xs, li.text-xs { font-size: calc(0.75rem * var(--font-scale-body)); }
+p.text-sm, li.text-sm { font-size: calc(0.875rem * var(--font-scale-body)); }
+p.text-base, li.text-base { font-size: calc(1rem * var(--font-scale-body)); }
+p.text-lg, li.text-lg { font-size: calc(1.125rem * var(--font-scale-body)); }
+p.text-xl, li.text-xl { font-size: calc(1.25rem * var(--font-scale-body)); }
+p:not([class*="text-"]), li:not([class*="text-"]) { font-size: calc(1em * var(--font-scale-body)); }
+/* 标题（含卡片小标题的 sm/base/lg/xl） */
+:is(h1, h2, h3, h4).text-sm { font-size: calc(0.875rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-base { font-size: calc(1rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-lg { font-size: calc(1.125rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-xl { font-size: calc(1.25rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-2xl { font-size: calc(1.5rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-3xl { font-size: calc(1.875rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-4xl { font-size: calc(2.25rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4).text-5xl { font-size: calc(3rem * var(--font-scale-heading)); }
+:is(h1, h2, h3, h4):not([class*="text-"]) { font-size: calc(1em * var(--font-scale-heading)); }
+/* 响应式前缀（Tailwind sm: 同特异性但媒体查询内后写会赢，需同样覆盖） */
+@media (min-width: 640px) {
+  :is(h1, h2, h3, h4).sm\:text-4xl { font-size: calc(2.25rem * var(--font-scale-heading)); }
+  :is(h1, h2, h3, h4).sm\:text-5xl { font-size: calc(3rem * var(--font-scale-heading)); }
+}
+/* 文章详情（prose）标题跟随标题缩放，默认 ×1 与现状一致 */
+.prose-container h1 { font-size: calc(1.75rem * var(--font-scale-heading)); }
+.prose-container h2 { font-size: calc(1.45rem * var(--font-scale-heading)); }
+.prose-container h3 { font-size: calc(1.2rem * var(--font-scale-heading)); }
+/* 导航 */
+nav a.text-xs, nav button.text-xs, .glass-nav a.text-xs, .glass-nav button.text-xs,
+aside a.text-xs, aside button.text-xs { font-size: calc(0.75rem * var(--font-scale-nav)); }
+nav a.text-sm, nav button.text-sm, .glass-nav a.text-sm, .glass-nav button.text-sm,
+aside a.text-sm, aside button.text-sm { font-size: calc(0.875rem * var(--font-scale-nav)); }
+nav a.text-\[13\.5px\], .glass-nav a.text-\[13\.5px\] { font-size: calc(13.5px * var(--font-scale-nav)); }
+nav a.text-\[17px\], .glass-nav a.text-\[17px\] { font-size: calc(17px * var(--font-scale-nav)); }
+/* 辅助小字 */
+.text-\[8px\] { font-size: calc(8px * var(--font-scale-aux)); }
+.text-\[9px\] { font-size: calc(9px * var(--font-scale-aux)); }
+.text-\[10px\] { font-size: calc(10px * var(--font-scale-aux)); }
+.text-\[10\.5px\] { font-size: calc(10.5px * var(--font-scale-aux)); }
+.text-\[11px\] { font-size: calc(11px * var(--font-scale-aux)); }
+.text-\[11\.5px\] { font-size: calc(11.5px * var(--font-scale-aux)); }
+.text-\[12\.5px\] { font-size: calc(12.5px * var(--font-scale-aux)); }
+time:not([class*="text-"]) { font-size: calc(1em * var(--font-scale-aux)); }
+/* 按钮（.btn-primary/.btn-ghost 自带 0.95rem，不能被裸 button 规则覆盖） */
+button.text-xs, .btn-primary.text-xs, .btn-ghost.text-xs { font-size: calc(0.75rem * var(--font-scale-btn)); }
+button.text-sm, .btn-primary.text-sm, .btn-ghost.text-sm { font-size: calc(0.875rem * var(--font-scale-btn)); }
+button:not([class*="text-"]):not(.btn-primary):not(.btn-ghost) {
+  font-size: calc(1em * var(--font-scale-btn));
+}
+.btn-primary, .btn-ghost { font-size: calc(0.95rem * var(--font-scale-btn)); }
+/* 数字/代码 */
+.font-mono.text-xs, code.text-xs, pre.text-xs { font-size: calc(0.75rem * var(--font-scale-mono)); }
+.font-mono.text-sm, code.text-sm, pre.text-sm { font-size: calc(0.875rem * var(--font-scale-mono)); }
+.font-mono:not([class*="text-"]), code:not([class*="text-"]), pre:not([class*="text-"]) {
+  font-size: calc(1em * var(--font-scale-mono));
+}
+
+/* ---- 字重覆盖（JS 设置 data-fw-{cat}='on' 时激活，强制统一该分类字重） ---- */
+:root[data-fw-body='on'] p, :root[data-fw-body='on'] li { font-weight: var(--font-weight-body, 400); }
+:root[data-fw-heading='on'] :is(h1, h2, h3, h4) { font-weight: var(--font-weight-heading, 900); }
+:root[data-fw-nav='on'] nav a, :root[data-fw-nav='on'] nav button,
+:root[data-fw-nav='on'] .glass-nav a, :root[data-fw-nav='on'] .glass-nav button,
+:root[data-fw-nav='on'] aside a, :root[data-fw-nav='on'] aside button { font-weight: var(--font-weight-nav, 500); }
+:root[data-fw-aux='on'] time, :root[data-fw-aux='on'] .glass-badge,
+:root[data-fw-aux='on'] .text-\[8px\], :root[data-fw-aux='on'] .text-\[9px\], :root[data-fw-aux='on'] .text-\[10px\],
+:root[data-fw-aux='on'] .text-\[10\.5px\], :root[data-fw-aux='on'] .text-\[11px\], :root[data-fw-aux='on'] .text-\[11\.5px\],
+:root[data-fw-aux='on'] .text-\[12\.5px\] { font-weight: var(--font-weight-aux, 400); }
+:root[data-fw-btn='on'] button, :root[data-fw-btn='on'] .btn-primary, :root[data-fw-btn='on'] .btn-ghost,
+:root[data-fw-btn='on'] .nav-icon-btn, :root[data-fw-btn='on'] .control-btn { font-weight: var(--font-weight-btn, 500); }
+:root[data-fw-mono='on'] code, :root[data-fw-mono='on'] pre, :root[data-fw-mono='on'] .font-mono {
+  font-weight: var(--font-weight-mono, 400);
+}
+
+/* ===== 全局文字颜色（后台「文字颜色」面板）=====
+   默认 = 现状（跟随主题深浅色）。
+   渐变模式：静态渐变（无动画、无 JS 逐元素操作，杜绝闪烁）。
+   只作用于纯文字元素（标题/正文/链接/时间）——它们在全站不带自身背景，
+   background-clip 安全；玻璃卡片/徽标/按钮/代码等自带背景的元素不参与，
+   背景不会被渐变裁剪破坏。 */
+:root[data-text-color='gradient'] :is(h1, h2, h3, h4, p, li, a, time) {
+  /* !important：压过内联 background 简写（如侧边栏菜单 active 背景）的
+     重置 —— 简写会把 background-image 置 none、background-clip 置 border-box，
+     导致 text-fill 透明后文字完全消失；加 important 保证渐变图与文字裁剪始终生效 */
+  background-image: var(--text-gradient, linear-gradient(135deg, #8b7cff, #45d4e4)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* 渐变文字必须透明背景，body 继承的阴影会糊掉渐变 */
+  text-shadow: none;
+  /* 排除 color 过渡：切换瞬间不淡入淡出（防闪烁） */
+  transition-property: background-color, opacity, transform, box-shadow, border-color, filter, backdrop-filter;
+}
+
+/* 文字描边（任意非默认颜色模式可开启，默认关）：
+   paint-order 让描边在填充之下向外扩，不吞字形 */
+:root[data-text-stroke='on'] body {
+  -webkit-text-stroke: var(--text-stroke, 1px #000);
+  paint-order: stroke fill;
+}
+
+/* 透明模式文字模糊（毛玻璃质感）：仅透明模式开启，作用于纯文字元素 */
+:root[data-text-blur='on'] :is(h1, h2, h3, h4, p, li, a, time) {
+  filter: blur(var(--text-blur, 0px));
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- 环境光背景（流动渐变 + 大光晕） ---------- */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: var(--bg-base);
+  transition: background-color 0.5s ease;
+}
+
+/* 流动渐变：缓慢移动的彩色光带 */
+.ambient-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    -45deg,
+    var(--spot-1) 0%,
+    transparent 25%,
+    var(--spot-2) 50%,
+    transparent 75%,
+    var(--spot-3) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-move var(--bg-anim-duration, 18s) ease infinite;
+  opacity: var(--bg-dynamics, 1);
+  transition: opacity 0.6s ease;
+}
+
+@keyframes gradient-move {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 大模糊光晕圆 */
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  opacity: var(--bg-dynamics, 1);
+  transition: opacity 0.6s ease;
+}
+
+.glow-1 {
+  top: -10%;
+  left: -10%;
+  width: 40%;
+  height: 40%;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  animation: glow-drift-1 26s ease-in-out infinite;
+}
+
+.glow-2 {
+  bottom: -10%;
+  right: -10%;
+  width: 40%;
+  height: 40%;
+  background: color-mix(in srgb, var(--accent-2) 18%, transparent);
+  animation: glow-drift-2 32s ease-in-out infinite;
+}
+
+@keyframes glow-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8%, 12%) scale(1.15); }
+}
+
+@keyframes glow-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10%, -8%) scale(1.1); }
+}
+
+/* ---------- 壁纸层（第 1/2 层：背景图片 + 透明度/模糊控制） ---------- */
+.wallpaper-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 1.5s ease-in-out, opacity 0.2s ease-out, filter 0.2s ease-out;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(0px);
+}
+
+/* 壁纸生效：透明度由 --wallpaper-opacity 控制 */
+:root[data-bg-mode='wallpaper'] .wallpaper-layer {
+  opacity: var(--wallpaper-opacity, 0.45);
+  filter: blur(var(--wallpaper-blur, 0px));
+}
+
+/* 壁纸蒙层：跟随主题的对比度纱（亮色白纱提亮 / 深色黑纱压暗），
+   保证铺在壁纸上的文字在明暗不均的图面上始终可读。强度由后台
+   「文字对比衬底」滑块控制（--wallpaper-scrim 0-1）。
+   注意：蒙层是壁纸层的子元素，会被父层 opacity（壁纸透明度）稀释，
+   因此强度除以 max(--wallpaper-opacity, 0.05) 补偿 —— 滑块调多少，
+   实际显示就是多少，不受壁纸透明度影响。 */
+:root[data-bg-mode='wallpaper'] .wallpaper-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--wallpaper-scrim-color, #fff) calc(var(--wallpaper-scrim, 0.35) * var(--wallpaper-scrim-factor, 1) / max(var(--wallpaper-opacity, 0.45), 0.05) * 100%), transparent);
+  pointer-events: none;
+}
+
+/* 壁纸磨砂层：覆盖一层噪点纹理（平方根映射，低档位即有可见变化） */
+:root[data-bg-mode='wallpaper'] .wallpaper-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--noise-texture) repeat;
+  /* 平方根映射：低档位就有明显变化，高档位饱和（变量已为 0-1 比例） */
+  opacity: calc(sqrt(var(--wallpaper-frost, 0)) * 0.65);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* 动态渐变背景（第 1 层默认）：壁纸模式下压暗让图更突出 */
+:root[data-bg-mode='wallpaper'] .ambient-bg {
+  opacity: 0.5;
+}
+
+/* 纯色模式：关掉渐变和光晕 */
+:root[data-bg-mode='plain'] .ambient-gradient,
+:root[data-bg-mode='plain'] .ambient-glow {
+  display: none;
+}
+
+/* ---------- 内容层 ---------- */
+.content-layer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- 布局容器 ---------- */
+.content-container {
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+/* ---------- 毛玻璃卡片（真玻璃：通透 + 强模糊 + 反光折射） ---------- */
+.glass-card {
+  position: relative;
+  isolation: isolate;
+  /* 双层背景：padding 区为半透明玻璃底，border 区为渐变亮边（上亮下暗） */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box,
+    linear-gradient(
+        150deg,
+        color-mix(in srgb, var(--glass-highlight) calc(75% * var(--glass-border-opacity, 0.6)), transparent) 0%,
+        color-mix(in srgb, var(--glass-highlight) calc(22% * var(--glass-border-opacity, 0.6)), transparent) 38%,
+        color-mix(in srgb, var(--glass-highlight) calc(8% * var(--glass-border-opacity, 0.6)), transparent) 68%,
+        color-mix(in srgb, var(--glass-highlight) calc(32% * var(--glass-border-opacity, 0.6)), transparent) 100%
+      )
+      border-box;
+  border-radius: var(--glass-radius, 24px);
+  /* 模糊强度直接由 --glass-blur 控制（完整值在 --glass-backdrop 变量里）。
+     只写标准属性：若同时写 -webkit- 版本，构建期 CSS 压缩器会把标准版
+     删掉只留 -webkit-，而 Chrome 对 -webkit- 版里的 var()/blur 解析不可靠 */
+  backdrop-filter: var(--glass-backdrop);
+  box-shadow:
+    0 calc(8px * var(--glass-shadow-strength, 0.5)) calc(32px * var(--glass-shadow-strength, 0.5)) rgba(0,0,0,calc(0.35 * var(--glass-shadow-strength, 0.5))),
+    0 calc(2px * var(--glass-shadow-strength, 0.5)) calc(8px * var(--glass-shadow-strength, 0.5)) rgba(0,0,0,calc(0.18 * var(--glass-shadow-strength, 0.5))),
+    inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) calc(45% * var(--glass-border-opacity, 0.6)), transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.6s cubic-bezier(0.21, 0.47, 0.32, 0.98),
+    box-shadow 0.6s ease;
+}
+
+/* 玻璃顶部高光线：模拟光从上方照入玻璃的漫反射 */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--glass-highlight) 26%, transparent) 0%,
+    color-mix(in srgb, var(--glass-highlight) 5%, transparent) 16%,
+    transparent 42%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 斜向反光带 + 磨砂噪点：玻璃折射光斑 + 噪点纹理（强度由 --glass-frost 控制） */
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    var(--noise-texture) repeat,
+    linear-gradient(
+      115deg,
+      transparent 14%,
+      color-mix(in srgb, var(--glass-highlight) 9%, transparent) 34%,
+      transparent 54%
+    );
+  /* 磨砂强度直接映射（无基线）：0 时完全干净，100 时全强度噪点 */
+  opacity: var(--glass-frost, 0.2);
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.5s ease;
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    var(--card-hover-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 60%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* hover 时反光带更亮、更宽：光在玻璃上流动的错觉 */
+.glass-card-hover:hover::after {
+  background:
+    var(--noise-texture) repeat,
+    linear-gradient(
+      115deg,
+      transparent 8%,
+      color-mix(in srgb, var(--glass-highlight) 16%, transparent) 32%,
+      transparent 52%
+    );
+}
+
+/* ---------- 浮动胶囊导航（更通透的玻璃） ---------- */
+.glass-nav {
+  background: var(--nav-bg);
+  backdrop-filter: var(--glass-backdrop);
+  border: 1px solid color-mix(in srgb, var(--glass-highlight) calc(38% * var(--glass-border-opacity, 0.6)), transparent);
+  box-shadow:
+    0 calc(8px * var(--glass-shadow-strength, 0.5)) calc(32px * var(--glass-shadow-strength, 0.5)) rgba(0,0,0,calc(0.12 * var(--glass-shadow-strength, 0.5))),
+    inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 55%, transparent);
+}
+
+/* 社交小按钮等小型玻璃元素 */
+.glass-badge {
+  background: color-mix(in srgb, var(--glass-highlight) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-highlight) 22%, transparent);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 30%, transparent);
+}
+
+.nav-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.nav-icon-btn:hover {
+  color: var(--text-primary);
+  background: var(--accent-muted);
+  transform: translateY(-1px);
+}
+
+/* ---------- 全屏背景字幕（横向流动，从右进往左流） ---------- */
+.bg-caption-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  transition: opacity 0.5s ease;
+}
+
+:root[data-captions='off'] .bg-caption-layer {
+  display: none;
+}
+
+.bg-caption-row {
+  position: absolute;
+  left: 100%;
+  white-space: nowrap;
+  animation-name: caption-slide-left;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: calc(40s / var(--caption-speed, 1));
+  will-change: transform;
+}
+
+.bg-caption-text {
+  font-family: var(--font-noto-sc), "Noto Sans SC", sans-serif;
+  letter-spacing: 0.35em;
+  color: var(--text-primary);
+  opacity: var(--caption-opacity, 0.07);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+@keyframes caption-slide-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-200vw); }
+}
+
+/* ---------- 渐变文字 ---------- */
+.gradient-text {
+  background: var(--gradient-main);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* 渐变文字必须有透明背景，body 继承的文字阴影会糊掉渐变，必须重置 */
+  text-shadow: none !important;
+}
+
+/* ---------- 文字阴影兜底重置 ----------
+   body 全局文字阴影提升壁纸上小字的可读性；
+   以下元素自带玻璃/渐变衬底，无需阴影，重置避免发虚。 */
+.glass-card, .glass-card *,
+.glass-nav, .glass-nav *,
+.glass-badge,
+.btn-primary, .btn-ghost, .glass-input,
+.nav-icon-btn, .control-btn {
+  text-shadow: none;
+}
+
+/* ---------- 渐变细线 ---------- */
+.gradient-hairline {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--text-secondary) 35%, transparent),
+    transparent
+  );
+  border: none;
+}
+
+/* ---------- 卡片 3D 下压（tilt） ---------- */
+.glass-card[data-tilt] {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.glass-card[data-tilt].tilt-active {
+  transform: perspective(900px)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.18s ease-out;
+}
+
+.glass-card[data-tilt] {
+  transition:
+    transform 0.35s cubic-bezier(0.21, 0.47, 0.32, 0.98),
+    box-shadow 0.6s ease;
+}
+
+/* ---------- 控制面板滑块 ---------- */
+.effect-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-secondary) 25%, transparent);
+  outline: none;
+  cursor: pointer;
+}
+
+.effect-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.effect-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.effect-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.effect-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-secondary) 25%, transparent);
+}
+
+/* ---------- 按钮 ---------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gradient-main);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 50%, transparent);
+  filter: brightness(1.05);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--glass-bg) 60%, var(--accent-muted));
+}
+
+/* ---------- 输入框 ---------- */
+.glass-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.glass-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent),
+    inset 0 1px 0 var(--glass-highlight);
+}
+
+/* ---------- 打字机光标 ---------- */
+.typing-cursor::after {
+  content: "▍";
+  margin-left: 2px;
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ---------- 光标光晕卡片 ---------- */
+.glow-card {
+  position: relative;
+}
+
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 8%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+/* ---------- 音乐播放器控制按钮 ---------- */
+.control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.control-btn:hover {
+  color: var(--text-primary);
+  background: var(--accent-muted);
+  transform: translateY(-1px);
+}
+
+/* ---------- 社交图标徽章 ---------- */
+.glass-badge {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+/* ---------- Prose 内容样式（文章详情页 Markdown 渲染） ---------- */
+.prose-container {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+}
+
+.prose-container h1,
+.prose-container h2,
+.prose-container h3,
+.prose-container h4 {
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.8em;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.prose-container h1 { font-size: 1.75rem; }
+.prose-container h2 { font-size: 1.45rem; }
+.prose-container h3 { font-size: 1.2rem; }
+
+.prose-container p {
+  margin-bottom: 1.2em;
+  color: var(--text-secondary);
+}
+
+.prose-container a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s ease;
+}
+
+.prose-container a:hover {
+  opacity: 0.8;
+}
+
+.prose-container strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.prose-container ul,
+.prose-container ol {
+  margin: 1em 0;
+  padding-left: 1.6em;
+  color: var(--text-secondary);
+}
+
+.prose-container li {
+  margin-bottom: 0.4em;
+}
+
+.prose-container blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.5em 1em;
+  margin: 1.5em 0;
+  color: var(--text-secondary);
+  background: var(--glass-bg);
+  border-radius: 0 12px 12px 0;
+}
+
+.prose-container code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85em;
+  background: var(--glass-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+}
+
+.prose-container pre {
+  background: var(--glass-bg);
+  padding: 1.2em;
+  border-radius: 14px;
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border: 1px solid var(--glass-border);
+}
+
+.prose-container pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.prose-container img {
+  max-width: 100%;
+  border-radius: 14px;
+  margin: 1.5em 0;
+}
+
+.prose-container table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9rem;
+}
+
+.prose-container th,
+.prose-container td {
+  padding: 0.6em 1em;
+  text-align: left;
+  border: 1px solid var(--glass-border);
+}
+
+.prose-container th {
+  background: var(--glass-bg);
+  font-weight: 600;
+}
+
+/* ---------- 代码高亮 ---------- */
+.hljs {
+  color: var(--text-primary);
+}
+.hljs-keyword { color: var(--accent); }
+.hljs-string { color: var(--accent-2); }
+.hljs-comment { color: var(--text-secondary); opacity: 0.7; }
+.hljs-title, .hljs-function { color: var(--accent); }
+.hljs-number { color: #f59e0b; }
+.hljs-attr { color: var(--accent-2); }
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-secondary) 30%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-secondary) 50%, transparent);
+}

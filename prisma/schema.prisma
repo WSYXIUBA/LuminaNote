@@ -1,0 +1,93 @@
+// 肆一纸心の栖息居 — 数据库模型
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 站点设置（站名、简介、关于页、Logo 等，可后台改）
+model Setting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+// 文章
+model Post {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  title     String
+  content   String   // Markdown 原文
+  excerpt   String?  // 自动截取前 N 字
+  cover     String?  // 封面图路径
+  category  String?  // 分类
+  tags      String?  // 逗号分隔标签
+  published Boolean  @default(false)
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 相册
+model Album {
+  id        Int           @id @default(autoincrement())
+  title     String
+  cover     String?       // 封面图
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+  images    GalleryImage[]
+}
+
+// 相册图片
+model GalleryImage {
+  id        Int      @id @default(autoincrement())
+  albumId   Int
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  filename  String
+  thumbnail String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// 留言
+model Message {
+  id        Int      @id @default(autoincrement())
+  nickname  String
+  content   String
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// 访问统计（PV）
+model PageView {
+  id        Int      @id @default(autoincrement())
+  path      String
+  date      String   // YYYY-MM-DD
+  createdAt DateTime @default(now())
+}
+
+// 访客统计（UV，按天+访客标识去重）
+model Visitor {
+  id        Int      @id @default(autoincrement())
+  visitorId String
+  date      String   // YYYY-MM-DD
+  createdAt DateTime @default(now())
+}
+
+// 管理员会话
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// 管理员账号
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

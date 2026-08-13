@@ -1,0 +1,25 @@
+# 肆一纸心の栖息居 —— Docker Compose
+# 用法：
+#   docker compose up -d --build
+#   docker compose exec habitat npx prisma migrate deploy
+#   docker compose exec habitat npx prisma db seed
+# 访问：http://服务器IP:3000
+
+services:
+  habitat:
+    build: .
+    container_name: siyizhixin-habitat
+    ports:
+      - "3000:3000"
+    environment:
+      # SQLite 数据库放 /app/data（挂载卷持久化）
+      DATABASE_URL: "file:/app/data/dev.db"
+      # 管理员账号（首次 seed 时创建，务必改成强密码）
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: "请改成强密码"
+      # 会话签名密钥（务必改成随机串，例如 openssl rand -base64 32）
+      JWT_SECRET: "请改成随机字符串"
+    volumes:
+      - ./data:/app/data        # SQLite 数据库
+      - ./uploads:/app/uploads  # 用户上传文件
+    restart: unless-stopped
